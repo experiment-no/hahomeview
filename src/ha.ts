@@ -51,7 +51,19 @@ export async function connect(h: Handlers): Promise<HA> {
   // The library never strips ?code=&auth_callback=1; a reload would re-exchange the used code.
   if (location.search) history.replaceState(null, "", location.pathname);
 
-  const conn = await createConnection({ auth });
+  // A replaced demo HA invalidates saved tokens. Drop them and ask for login again,
+  // the same way a later reconnect does.
+  let conn: Connection;
+  try {
+    conn = await createConnection({ auth });
+  } catch (err) {
+    if (err === ERR_INVALID_AUTH) {
+      saveTokens(null);
+      location.replace(location.pathname);
+      return new Promise(() => {});
+    }
+    throw err;
+  }
   conn.addEventListener("reconnect-error", (_c, err) => {
     if (err === ERR_INVALID_AUTH) {
       saveTokens(null);
