@@ -21,33 +21,43 @@
       .wide { grid-column: span 2; }
       .big { grid-column: span 2; grid-row: span 2; }
       .themes { display: flex; gap: 10px; margin-bottom: 18px; }
-      .themes button {
+      .themes button, .themes label {
         font: inherit;
         font-size: 14px;
         font-weight: 600;
         padding: 8px 14px;
         border-radius: 980px;
-        border: 1px solid var(--glass-border-soft);
-        background: var(--glass-fill);
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        background: rgba(255, 255, 255, 0.22);
         color: var(--text);
-        -webkit-backdrop-filter: blur(16px);
-        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
         cursor: pointer;
       }
-      html[data-theme="light"] { color-scheme: light; }
+      .themes label { display: inline-flex; align-items: center; gap: 8px; cursor: default; }
+      .themes input { width: 110px; accent-color: var(--text); }
+      html[data-theme="light"] {
+        color-scheme: light;
+        --text: #1c1c1e;
+        --text-2: rgba(60, 60, 67, 0.62);
+        --icon: #5c5c66;
+        --bg-1: #f6c6e4;
+        --bg-2: #efe4fb;
+        --bg-3: #d7b4f6;
+        --bg-4: #f3a8c8;
+        --bg-glow: rgba(255, 255, 255, 0.72);
+        --glass-shadow: rgba(40, 16, 64, 0.16);
+        --glass-shadow-lift: rgba(40, 16, 64, 0.24);
+      }
       html[data-theme="dark"] { color-scheme: dark; }
       html[data-theme="dark"] {
         --text: #f2f2f7;
         --text-2: rgba(235, 235, 245, 0.58);
-        --icon: #c9c9d1;
-        --glass-fill: rgba(52, 54, 64, 0.48);
-        --glass-fill-strong: rgba(68, 70, 82, 0.58);
-        --glass-border: rgba(255, 255, 255, 0.22);
-        --glass-border-soft: rgba(255, 255, 255, 0.1);
-        --glass-highlight: rgba(255, 255, 255, 0.28);
-        --glass-specular: rgba(255, 255, 255, 0.16);
-        --glass-shadow: rgba(0, 0, 0, 0.42);
-        --glass-shadow-lift: rgba(0, 0, 0, 0.55);
+        --icon: #f4f4f8;
+        --glass-text-off: rgba(255, 255, 255, 0.96);
+        --glass-secondary-off: rgba(255, 255, 255, 0.68);
+        --glass-shadow: rgba(0, 0, 0, 0.38);
+        --glass-shadow-lift: rgba(0, 0, 0, 0.5);
         --tint: rgba(168, 156, 240, 0.62);
         --tint-text: #1a1240;
         --tint-edge: rgba(255, 255, 255, 0.34);
@@ -60,22 +70,19 @@
         --tint-alert: rgba(240, 160, 130, 0.58);
         --tint-alert-text: #4a1a0c;
         --tint-alert-edge: rgba(255, 255, 255, 0.3);
-        --bg-1: #23263a;
-        --bg-2: #12141f;
-        --bg-3: #2c2238;
-        --bg-glow: rgba(120, 140, 200, 0.18);
+        --bg-1: #6a2e86;
+        --bg-2: #241033;
+        --bg-3: #3a1d66;
+        --bg-4: #d23b78;
+        --bg-glow: rgba(255, 140, 190, 0.42);
       }
       html[data-theme="photo"] {
         color-scheme: dark;
         --text: #f2f2f7;
         --text-2: rgba(235, 235, 245, 0.58);
-        --icon: #c9c9d1;
-        --glass-fill: rgba(52, 54, 64, 0.42);
-        --glass-fill-strong: rgba(68, 70, 82, 0.55);
-        --glass-border: rgba(255, 255, 255, 0.28);
-        --glass-border-soft: rgba(255, 255, 255, 0.14);
-        --glass-highlight: rgba(255, 255, 255, 0.32);
-        --glass-specular: rgba(255, 255, 255, 0.2);
+        --icon: #f4f4f8;
+        --glass-text-off: rgba(255, 255, 255, 0.96);
+        --glass-secondary-off: rgba(255, 255, 255, 0.68);
         --glass-shadow: rgba(0, 0, 0, 0.4);
         --glass-shadow-lift: rgba(0, 0, 0, 0.55);
         --tint: rgba(168, 156, 240, 0.62);
@@ -91,8 +98,21 @@
         --tint-alert-text: #4a1a0c;
         --tint-alert-edge: rgba(255, 255, 255, 0.3);
       }
-      html[data-theme="photo"] body::before {
-        background:
+      html[data-theme="grid"] {
+        color-scheme: light;
+        --text: #1c1c1e;
+        --text-2: rgba(60, 60, 67, 0.62);
+        --wallpaper:
+          linear-gradient(#cfcfcf 1px, transparent 1px),
+          linear-gradient(90deg, #cfcfcf 1px, transparent 1px),
+          #f3f3f3;
+        --wallpaper-size: 26px 26px;
+        --wallpaper-lens-size: 34px 34px;
+        --wallpaper-repeat: repeat;
+        --lens-scale: 1.31;
+      }
+      html[data-theme="photo"] {
+        --wallpaper:
           linear-gradient(rgba(20, 24, 40, 0.28), rgba(20, 24, 40, 0.4)),
           radial-gradient(60% 50% at 20% 20%, #6a8cff 0%, transparent 60%),
           radial-gradient(50% 60% at 80% 30%, #ff8ab3 0%, transparent 55%),
@@ -109,6 +129,10 @@
         <button type="button" data-theme="light">Light</button>
         <button type="button" data-theme="dark">Dark</button>
         <button type="button" data-theme="photo">Photo</button>
+        <button type="button" data-theme="grid">Grid</button>
+        <label>Glass <output id="glass-out">35</output>
+          <input id="glass-range" type="range" min="0" max="100" value="35" aria-label="Glass transparency" />
+        </label>
       </div>
       <div class="grid" id="grid"></div>
     </div>

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildRooms, tapAction, stateText } from "./rooms.ts";
+import { buildRooms, fillPercent, tapAction, stateText } from "./rooms.ts";
 
 const areas = [
   { area_id: "living", name: "Living Room", temperature_entity_id: "sensor.living_temp" },
@@ -39,7 +39,9 @@ test("buildRooms groups by area, filters hidden/category, sorts controls first",
   assert.deepEqual(living.tiles.map((t) => t.id), ["light.sofa", "binary_sensor.door", "lock.front", "scene.movie"]);
   assert.equal(living.temperature, "22°");
   assert.equal(living.tiles[0].stateText, "50%");
+  assert.equal(living.tiles[0].fill, 50);
   assert.equal(living.tiles[0].active, true);
+  assert.equal(living.tiles[2].fill, undefined); // lock has no level
   assert.equal(living.tiles[1].stateText, "Open");
   assert.equal(living.tiles[2].active, false); // locked = inactive
   const bed = home.rooms[1];
@@ -61,4 +63,14 @@ test("tapAction per domain", () => {
   assert.equal(tapAction({ entity_id: "cover.x", state: "open", attributes: { supported_features: 1 } }), undefined);
   assert.deepEqual(tapAction({ entity_id: "cover.x", state: "open", attributes: { supported_features: 3 } }), { domain: "cover", service: "toggle" });
   assert.equal(stateText({ entity_id: "climate.x", state: "heat", attributes: { current_temperature: 20.5 } }), "20.5°");
+});
+
+test("fillPercent follows brightness, position and fan speed, and skips entities without a level", () => {
+  assert.equal(fillPercent({ entity_id: "light.a", state: "on", attributes: { brightness: 117 } }), 46);
+  assert.equal(fillPercent({ entity_id: "light.a", state: "off", attributes: { brightness: 117 } }), undefined);
+  assert.equal(fillPercent({ entity_id: "cover.a", state: "open", attributes: { current_position: 40 } }), 40);
+  assert.equal(fillPercent({ entity_id: "fan.a", state: "on", attributes: { percentage: 75 } }), 75);
+  assert.equal(fillPercent({ entity_id: "light.a", state: "unavailable", attributes: {} }), undefined);
+  assert.equal(fillPercent({ entity_id: "lock.a", state: "locked", attributes: {} }), undefined);
+  assert.equal(fillPercent({ entity_id: "sensor.phone", state: "64", attributes: { device_class: "battery" } }), 64);
 });

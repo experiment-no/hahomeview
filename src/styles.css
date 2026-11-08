@@ -6,18 +6,54 @@
   --text-2: rgba(60, 60, 67, 0.62);
   --icon: #5c5c66;
 
-  /* Liquid Glass surface tokens */
-  --glass-fill: rgba(255, 255, 255, 0.38);
-  --glass-fill-strong: rgba(255, 255, 255, 0.52);
-  --glass-border: rgba(255, 255, 255, 0.55);
-  --glass-border-soft: rgba(255, 255, 255, 0.28);
-  --glass-highlight: rgba(255, 255, 255, 0.72);
-  --glass-specular: rgba(255, 255, 255, 0.42);
-  --glass-shadow: rgba(15, 18, 28, 0.14);
-  --glass-shadow-lift: rgba(15, 18, 28, 0.22);
-  --glass-blur: 24px;
-  --glass-saturate: 165%;
-  --radius: 26px;
+  /*
+   * Liquid Glass. Color comes from the wallpaper, not from a fill.
+   * --glass-transparency is 0–100 (higher = clearer). --glass-clear-factor
+   * scales state opacity and is 1 at the default of 35, so off stays 0.35
+   * and on stays 0.85. Edges, highlights and the entity fill do not follow it.
+   */
+  --glass-transparency: 35;
+  --glass-clear-factor: 1;
+  --glass-opacity-off: 0.35;
+  --glass-opacity-on: 0.85;
+  /* Off-state type is charcoal on a light wallpaper so it stays readable. Dark mode switches it to white. */
+  --glass-text-off: #292929;
+  --glass-text-on: #292929;
+  --glass-secondary-off: rgba(40, 40, 40, 0.55);
+  --glass-secondary-on: rgba(40, 40, 40, 0.55);
+  --glass-blur: 14px;
+  --glass-saturate: 170%;
+  --glass-highlight-opacity: 0.7;
+  --lens-scale: 1.12;
+  --radius: 28px;
+  --fill-color: rgba(255, 196, 48, 0.82);
+  --glass-rim-gradient: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(255, 255, 255, 0.06) 42%,
+    rgba(255, 255, 255, 0.28) 100%
+  );
+  --glass-sheen: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.1) 16%,
+      rgba(255, 255, 255, 0) 38%
+    ),
+    radial-gradient(70% 45% at 50% -8%, rgba(255, 255, 255, 0.38), transparent 62%);
+  --glass-shadow: rgba(40, 16, 64, 0.16);
+  --glass-shadow-lift: rgba(40, 16, 64, 0.24);
+  --glass-shadow-stack:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
+    0 10px 28px -14px var(--glass-shadow),
+    0 2px 6px -2px var(--glass-shadow);
+  --glass-shadow-stack-lift:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 16px 36px -12px var(--glass-shadow-lift),
+    0 4px 10px -2px var(--glass-shadow);
 
   /* Active / state tints — translucent so the glass material still reads */
   --tint: rgba(176, 158, 245, 0.58);
@@ -37,29 +73,39 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --press-scale: 0.98;
   --duration-fast: 160ms;
-  --duration: 220ms;
+  --duration: 280ms;
 
-  /* Wallpaper */
-  --bg-1: #e4ebf7;
-  --bg-2: #d3dbea;
-  --bg-3: #eadfe9;
-  --bg-glow: rgba(255, 255, 255, 0.55);
+  /* Wallpaper — chromatic so the lens picks up real color, not a gray wash. */
+  --bg-1: #f6c6e4;
+  --bg-2: #efe4fb;
+  --bg-3: #d7b4f6;
+  --bg-4: #f3a8c8;
+  --bg-glow: rgba(255, 255, 255, 0.72);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #f2f2f7;
     --text-2: rgba(235, 235, 245, 0.58);
-    --icon: #c9c9d1;
-
-    --glass-fill: rgba(52, 54, 64, 0.48);
-    --glass-fill-strong: rgba(68, 70, 82, 0.58);
-    --glass-border: rgba(255, 255, 255, 0.22);
-    --glass-border-soft: rgba(255, 255, 255, 0.1);
-    --glass-highlight: rgba(255, 255, 255, 0.28);
-    --glass-specular: rgba(255, 255, 255, 0.16);
-    --glass-shadow: rgba(0, 0, 0, 0.42);
-    --glass-shadow-lift: rgba(0, 0, 0, 0.55);
+    --icon: #f4f4f8;
+    --glass-text-off: rgba(255, 255, 255, 0.96);
+    --glass-secondary-off: rgba(255, 255, 255, 0.68);
+    --glass-shadow: rgba(0, 0, 0, 0.38);
+    --glass-shadow-lift: rgba(0, 0, 0, 0.5);
+    --glass-rim-gradient: linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.78) 0%,
+      rgba(255, 255, 255, 0.16) 30%,
+      rgba(255, 255, 255, 0.04) 58%,
+      rgba(255, 255, 255, 0.4) 100%
+    );
+    --glass-sheen: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.42) 0%,
+        rgba(255, 255, 255, 0.06) 18%,
+        rgba(255, 255, 255, 0) 40%
+      ),
+      radial-gradient(70% 45% at 50% -8%, rgba(255, 255, 255, 0.28), transparent 62%);
 
     --tint: rgba(168, 156, 240, 0.62);
     --tint-text: #1a1240;
@@ -74,10 +120,11 @@
     --tint-alert-text: #4a1a0c;
     --tint-alert-edge: rgba(255, 255, 255, 0.3);
 
-    --bg-1: #23263a;
-    --bg-2: #12141f;
-    --bg-3: #2c2238;
-    --bg-glow: rgba(120, 140, 200, 0.18);
+    --bg-1: #6a2e86;
+    --bg-2: #241033;
+    --bg-3: #3a1d66;
+    --bg-4: #d23b78;
+    --bg-glow: rgba(255, 140, 190, 0.42);
   }
 }
 
@@ -96,18 +143,23 @@ body {
   overflow: hidden;
 }
 
-/* Soft luminous wallpaper — glass tiles refract these layers. */
+/* Wallpaper shared with the lens layer so edge refraction lines up with the page. */
+:root {
+  --wallpaper:
+    radial-gradient(50% 42% at 8% 6%, var(--bg-glow) 0%, transparent 68%),
+    radial-gradient(48% 52% at 92% 12%, var(--bg-4) 0%, transparent 62%),
+    radial-gradient(55% 48% at 78% 88%, var(--bg-1) 0%, transparent 66%),
+    radial-gradient(42% 36% at 22% 72%, var(--bg-3) 0%, transparent 70%),
+    var(--bg-2);
+}
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(55% 45% at 12% 8%, var(--bg-glow) 0%, transparent 70%),
-    radial-gradient(50% 55% at 88% 18%, var(--bg-3) 0%, transparent 68%),
-    radial-gradient(70% 55% at 48% 100%, var(--bg-1) 0%, transparent 72%),
-    radial-gradient(40% 35% at 60% 40%, var(--bg-glow) 0%, transparent 70%),
-    var(--bg-2);
+  background: var(--wallpaper);
+  background-size: var(--wallpaper-size, auto);
+  background-repeat: var(--wallpaper-repeat, no-repeat);
 }
 
 @media (prefers-reduced-motion: reduce) {

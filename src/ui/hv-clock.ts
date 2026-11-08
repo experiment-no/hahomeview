@@ -1,5 +1,5 @@
 import { LitElement, html, css, svg } from "lit";
-import { glass } from "./glass.ts";
+import { glass, glassLayers } from "./glass.ts";
 
 export class HvClock extends LitElement {
   static properties = { _now: { state: true } };
@@ -35,49 +35,32 @@ export class HvClock extends LitElement {
     glass,
     css`
       :host {
+        --radius: 50%;
+        --surface-alpha: 0.18;
         display: flex;
         align-items: center;
         justify-content: center;
         aspect-ratio: 1;
+        overflow: hidden;
         cursor: default;
+        color: #fff;
       }
-      /* Clock is chrome, not a control — kill press/hover lift from glass. */
-      :host(:active) { transform: none; filter: none; }
+      /* Clock is chrome, not a control — no press scale. */
+      :host(:active) { transform: none; }
       @media (hover: hover) and (pointer: fine) {
-        :host(:hover) { filter: none; background: var(--glass-fill); }
+        :host(:hover) { box-shadow: var(--glass-shadow-stack); }
       }
-      svg {
+      .face-svg {
         position: relative;
-        z-index: 2;
+        z-index: 5;
         width: 78%;
         height: 78%;
+        filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.7));
       }
-      .face { fill: rgba(255, 255, 255, 0.78); }
-      .tick {
-        stroke: var(--text);
-        stroke-width: 2;
-        stroke-linecap: round;
-        opacity: 0.35;
-      }
-      .num {
-        fill: var(--text);
-        font-size: 9px;
-        font-weight: 600;
-        text-anchor: middle;
-        opacity: 0.9;
-      }
-      .hand {
-        stroke: var(--text);
-        stroke-linecap: round;
-      }
-      .sec {
-        stroke: #ff9f0a;
-        stroke-width: 1;
-      }
-      .hub { fill: #ff9f0a; }
-      @media (prefers-color-scheme: dark) {
-        .face { fill: rgba(28, 28, 34, 0.78); }
-      }
+      .ring { fill: none; stroke: #fff; stroke-width: 1.25; }
+      .tick { stroke: #fff; stroke-linecap: round; }
+      .hand { stroke: #fff; stroke-linecap: round; }
+      .hub { fill: #fff; }
     `,
   ];
 
@@ -86,19 +69,21 @@ export class HvClock extends LitElement {
     const s = d.getSeconds();
     const m = d.getMinutes() + s / 60;
     const h = (d.getHours() % 12) + m / 60;
-    const hand = (deg: number, len: number, cls: string, w: number) =>
-      svg`<line class="hand ${cls}" x1="50" y1="50" x2="50" y2="${50 - len}" stroke-width="${w}" transform="rotate(${deg} 50 50)"/>`;
-    return html`<svg viewBox="0 0 100 100">
-      <circle class="face" cx="50" cy="50" r="48" />
-      ${[...Array(12)].map((_, i) => {
-        const a = (i * Math.PI) / 6;
-        const num = i === 0 ? 12 : i;
-        return svg`<text class="num" x="${50 + 39 * Math.sin(a)}" y="${50 - 39 * Math.cos(a) + 3}">${num}</text>`;
-      })}
-      ${hand(h * 30, 22, "", 4)}
-      ${hand(m * 6, 32, "", 3)}
-      ${hand(s * 6, 36, "sec", 1)}
-      <circle class="hub" cx="50" cy="50" r="2.5" />
+    const hand = (deg: number, len: number, w: number) =>
+      svg`<line class="hand" x1="50" y1="54" x2="50" y2="${50 - len}" stroke-width="${w}" transform="rotate(${deg} 50 50)"/>`;
+    const ticks = [...Array(12)].map((_, i) => {
+      const a = (i * Math.PI) / 6;
+      const major = i % 3 === 0;
+      const inner = major ? 34 : 39;
+      const outer = 45.2;
+      return svg`<line class="tick" x1="${50 + inner * Math.sin(a)}" y1="${50 - inner * Math.cos(a)}" x2="${50 + outer * Math.sin(a)}" y2="${50 - outer * Math.cos(a)}" stroke-width="${major ? 2.6 : 1.35}"/>`;
+    });
+    return html`${glassLayers()}<svg class="face-svg" viewBox="0 0 100 100">
+      <circle class="ring" cx="50" cy="50" r="46" />
+      ${ticks}
+      ${hand(h * 30, 18, 3.4)}
+      ${hand(m * 6, 28, 2.2)}
+      <circle class="hub" cx="50" cy="50" r="2.1" />
     </svg>`;
   }
 }

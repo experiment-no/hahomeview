@@ -1,114 +1,167 @@
-import { css } from "lit";
+import { css, html, unsafeCSS } from "lit";
+import { lensSvg } from "../glass-lens.ts";
 
 /**
- * Shared Liquid Glass surface for tiles and chrome.
- * Tokens live on :root (styles.css); this sheet only composes the material.
- *
- * Safari cannot apply SVG filters to backdrop-filter, so depth comes from
- * blur + saturate, translucent fill, specular rim, and layered shadows.
+ * Optical layers for one glass object. The parent must not use CSS opacity:
+ * icons stay in a later stacking level. `fill` is a 0–100 bottom-up level.
  */
-export const glass = css`
-  :host {
-    display: block;
-    position: relative;
-    isolation: isolate;
-    border-radius: var(--radius);
-    background: var(--glass-fill);
-    border: 1px solid var(--glass-border-soft);
-    box-shadow:
-      0 1px 0 var(--glass-highlight) inset,
-      0 0 0 0.5px var(--glass-border) inset,
-      0 10px 28px -8px var(--glass-shadow),
-      0 2px 8px -2px var(--glass-shadow);
-    overflow: hidden;
-    color: var(--text);
-    --_icon: var(--icon);
-    transition:
-      background var(--duration) var(--ease-out),
-      border-color var(--duration) var(--ease-out),
-      box-shadow var(--duration) var(--ease-out),
-      color var(--duration) var(--ease-out),
-      transform var(--duration-fast) var(--ease-out),
-      filter var(--duration) var(--ease-out);
-  }
+export function glassLayers(fill = 0) {
+  const level = Number.isFinite(fill) ? Math.max(0, Math.min(100, fill)) : 0;
+  return html`${lensSvg()}
+    <div class="lens"></div>
+    <div class="surface"></div>
+    <div class="fill" style="height:${level}%"></div>`;
+}
 
-  /* Specular sheen — top-left light catch, reads as glass thickness. */
-  :host::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    border-radius: inherit;
-    background:
-      linear-gradient(
-        155deg,
-        var(--glass-specular) 0%,
-        rgba(255, 255, 255, 0.08) 28%,
-        rgba(255, 255, 255, 0) 52%
-      ),
-      linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.14) 0%,
-        rgba(255, 255, 255, 0) 42%
-      );
-    opacity: 0.95;
-    transition: opacity var(--duration) var(--ease-out);
-  }
+/**
+ * Shared Liquid Glass.
+ * Safari cannot displace a backdrop-filter, so the rim is a copy of the wallpaper
+ * (fixed to the viewport), warped by a static edge map, and masked to the perimeter.
+ * The center is the live blurred backdrop. State opacity tints only `.surface`.
+ */
+function glassRoot(root: string) {
+  const r = unsafeCSS(root);
+  return css`
+    ${r} {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--glass-text-off);
+      --_icon: var(--glass-text-off);
+      --surface-alpha: var(--glass-opacity-off);
+      box-shadow: var(--glass-shadow-stack);
+      transition:
+        box-shadow var(--duration) var(--ease-out),
+        color var(--duration) var(--ease-out),
+        transform var(--duration-fast) var(--ease-out);
+    }
 
-  /* Soft inner vignette so content sits in the glass, not on a flat fill. */
-  :host::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    border-radius: inherit;
-    background: radial-gradient(
-      120% 90% at 50% 110%,
-      rgba(0, 0, 0, 0.1) 0%,
-      transparent 55%
-    );
-  }
+    ${r} .defs {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
 
-  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    :host {
-      background: var(--glass-fill);
+    /*
+     * Rim refraction. A magnified, edge-displaced copy of the wallpaper is
+     * masked to a band that follows the real corner radius. The frosted
+     * surface sits inside that band so the bend stays visible.
+     */
+    ${r} .lens {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      padding: 12px;
+      background: var(--wallpaper);
+      background-attachment: scroll;
+      background-size: var(--wallpaper-lens-size, calc(var(--lens-scale) * 100vw) calc(var(--lens-scale) * 100vh));
+      background-repeat: var(--wallpaper-repeat, no-repeat);
+      filter: url(#glass-lens);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+    }
+
+    ${r} .surface {
+      position: absolute;
+      inset: 8px;
+      z-index: 1;
+      pointer-events: none;
+      border-radius: calc(var(--radius) - 8px);
+      background: rgba(255, 255, 255, min(1, calc(var(--surface-alpha) * var(--glass-clear-factor))));
+      box-shadow: 0 0 10px 5px rgba(255, 255, 255, min(1, calc(var(--surface-alpha) * var(--glass-clear-factor))));
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
       backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      transition: background var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
     }
-  }
 
-  /* Fallback when backdrop-filter is unavailable: denser fill, no fake blur. */
-  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    :host {
-      background: var(--glass-fill-strong);
+    ${r} .fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2;
+      height: 0;
+      pointer-events: none;
+      background: var(--fill-color);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      -webkit-mask-image: linear-gradient(#000 0, #000 calc(100% - 22px), transparent 100%);
+      mask-image: linear-gradient(#000 0, #000 calc(100% - 22px), transparent 100%);
+      transition: height var(--duration) var(--ease-out);
     }
-  }
 
-  @media (hover: hover) and (pointer: fine) {
-    :host(:hover) {
-      background: var(--glass-fill-strong);
-      box-shadow:
-        0 1px 0 var(--glass-highlight) inset,
-        0 0 0 0.5px var(--glass-border) inset,
-        0 14px 34px -8px var(--glass-shadow-lift),
-        0 4px 12px -2px var(--glass-shadow);
-      filter: brightness(1.04);
+    /* Bevel: bright along the top and left, shaded along the bottom. */
+    ${r}::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      border-radius: inherit;
+      padding: 1.5px;
+      background: linear-gradient(
+        160deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0.28) 28%,
+        rgba(255, 255, 255, 0.08) 62%,
+        rgba(255, 255, 255, 0.45) 100%
+      );
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
     }
-  }
 
-  :host(:active) {
-    transform: scale(var(--press-scale));
-    filter: brightness(0.98);
-  }
+    ${r}::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      border-radius: inherit;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 10%, transparent 28%),
+        radial-gradient(80% 42% at 18% 0%, rgba(255, 255, 255, 0.32), transparent 60%),
+        linear-gradient(to top, rgba(255, 255, 255, 0.14), transparent 18%);
+      opacity: var(--glass-highlight-opacity);
+    }
 
-  @media (prefers-reduced-motion: reduce) {
-    :host {
-      transition: none;
+    @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      ${r} .surface {
+        background: rgba(255, 255, 255, min(1, calc((var(--surface-alpha) + 0.25) * var(--glass-clear-factor))));
+      }
     }
-    :host(:active) {
-      transform: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      ${r}:hover {
+        box-shadow: var(--glass-shadow-stack-lift);
+      }
+      ${r}:hover::after {
+        opacity: 1;
+      }
     }
-  }
-`;
+
+    ${r}:active {
+      transform: scale(var(--press-scale));
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ${r},
+      ${r} .surface,
+      ${r} .fill {
+        transition: none;
+      }
+      ${r}:active {
+        transform: none;
+      }
+    }
+  `;
+}
+
+export const glass = glassRoot(":host");
+export const glassChip = glassRoot(".glass-chip");

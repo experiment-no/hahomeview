@@ -1,4 +1,9 @@
 import "./ui/hv-app.ts";
+import { initGlassTransparency } from "./glass-pref.ts";
+import { startLensTracking } from "./glass-lens.ts";
+
+initGlassTransparency();
+startLensTracking();
 import type { HvApp } from "./ui/hv-app.ts";
 import { connect, type Registries } from "./ha.ts";
 import { buildRooms } from "./rooms.ts";

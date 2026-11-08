@@ -8,6 +8,9 @@ import { tapAction } from "../rooms.ts";
 import type { HA } from "../ha.ts";
 import { resolveIconName, iconPath, iconSvg } from "../icons.ts";
 import { loadLayouts, saveLayouts, orderTiles, move, nextSize, SPAN, type Layouts, type Size } from "../layout.ts";
+import { glassChip, glassLayers } from "./glass.ts";
+import { applyGlassTransparency, readGlassTransparency } from "../glass-pref.ts";
+import { pokeLens } from "../glass-lens.ts";
 
 const CLOCK = "clock";
 type Item = Tile | { id: typeof CLOCK };
@@ -28,6 +31,7 @@ export class HvApp extends LitElement {
     _editing: { state: true },
     _layouts: { state: true },
     _drag: { state: true },
+    _glass: { state: true },
   };
   declare home?: Home;
   declare states: HassEntities;
@@ -39,6 +43,7 @@ export class HvApp extends LitElement {
   declare _editing?: string; // page id in edit mode
   declare _layouts: Layouts;
   declare _drag?: Drag;
+  declare _glass: number;
   private _press?: Press;
   private _suppressClick = false;
   private _cols = 3;
@@ -50,6 +55,8 @@ export class HvApp extends LitElement {
     this._page = 0;
     this._icons = new Map();
     this._layouts = loadLayouts();
+    this._glass = readGlassTransparency();
+    applyGlassTransparency(this._glass);
     this.addEventListener("pointermove", this._onMove);
     this.addEventListener("pointerup", this._onUp);
     this.addEventListener("pointercancel", this._onUp);
@@ -62,6 +69,7 @@ export class HvApp extends LitElement {
   }
   updated() {
     this._measure();
+    pokeLens();
   }
 
   /** Fit the grid to the device: tiles are about a third of the short side, never under 150px. */
@@ -79,7 +87,9 @@ export class HvApp extends LitElement {
     this.style.setProperty("--tile", `${tile}px`);
   }
 
-  static styles = css`
+  static styles = [
+    glassChip,
+    css`
     :host { display: block; height: 100%; --cols: 3; --tile: 180px; }
     * { box-sizing: border-box; }
     .pages {
@@ -102,34 +112,41 @@ export class HvApp extends LitElement {
     }
     h1 {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
+      gap: 12px;
       margin: 4px 6px 14px;
       font-size: 28px;
       font-weight: 700;
       letter-spacing: -0.35px;
     }
     h1 span { font-size: 20px; font-weight: 500; color: var(--text-2); }
-    h1 button {
+    .glass-chip {
+      --radius: 980px;
+      --glass-rim: 2px;
+      --glass-lens: 1;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 0;
+      padding: 7px 14px;
       font: inherit;
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--tint-text);
-      background: var(--tint);
-      border: 1px solid var(--tint-edge);
-      border-radius: 980px;
-      padding: 6px 16px;
+      overflow: hidden;
+      color: var(--text);
       cursor: pointer;
-      -webkit-backdrop-filter: blur(16px) saturate(160%);
-      backdrop-filter: blur(16px) saturate(160%);
-      box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.45) inset,
-        0 6px 18px -6px var(--glass-shadow);
-      transition:
-        transform var(--duration-fast) var(--ease-out),
-        filter var(--duration-fast) var(--ease-out);
+      flex: none;
     }
-    h1 button:active { transform: scale(var(--press-scale)); }
+    .glass-chip > span,
+    .glass-chip > input { position: relative; z-index: 5; }
+    h1 button.glass-chip { font-size: 16px; font-weight: 600; padding: 6px 16px; }
+    .glass-pref input {
+      width: 88px;
+      margin: 0;
+      accent-color: var(--text);
+    }
     .grid {
       display: grid;
       grid-template-columns: repeat(var(--cols), var(--tile));
@@ -181,15 +198,17 @@ export class HvApp extends LitElement {
       text-align: center;
     }
     @media (prefers-reduced-motion: reduce) {
-      h1 button, .dots i { transition: none; }
+      .dots i { transition: none; }
       hv-clock[editing] { animation: none; }
       .dots i.on { transform: none; }
     }
-  `;
+  `,
+  ];
 
   private _onScroll(e: Event) {
     const el = e.currentTarget as HTMLElement;
     this._page = Math.round(el.scrollLeft / el.clientWidth);
+    pokeLens();
   }
 
   private _tap(tile: Tile) {
@@ -346,10 +365,31 @@ export class HvApp extends LitElement {
     </div>`;
   }
 
+  private _onGlass(e: Event) {
+    this._glass = applyGlassTransparency(Number((e.target as HTMLInputElement).value));
+  }
+
+  private _glassControl() {
+    return html`<label class="glass-chip glass-pref">
+      ${glassLayers()}
+      <span>Glass ${this._glass}</span>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        .value=${String(this._glass)}
+        @input=${this._onGlass}
+        aria-label="Glass transparency"
+      />
+    </label>`;
+  }
+
   private _title(page: string, text: string, extra?: unknown) {
     return html`<h1>
       <span style="font: inherit; color: inherit">${text}</span>
-      ${this._editing === page ? html`<button @click=${() => (this._editing = undefined)}>Done</button>` : extra ?? nothing}
+      ${this._editing === page
+        ? html`<button class="glass-chip" @click=${() => (this._editing = undefined)}>${glassLayers()}<span>Done</span></button>`
+        : extra ?? nothing}
     </h1>`;
   }
 
@@ -360,7 +400,7 @@ export class HvApp extends LitElement {
     return html`
       <div class="pages" @scroll=${this._onScroll}>
         <section class="page">
-          ${this._title("home", "Home")}
+          ${this._title("home", "Home", this._glassControl())}
           ${this._grid("home", "room")}
         </section>
         ${this.home.rooms.map(

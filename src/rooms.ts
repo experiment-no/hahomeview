@@ -50,6 +50,8 @@ export interface Tile {
   room?: string;
   /** Camera snapshot URL when the tile is a camera. */
   image?: string;
+  /** 0–100 bottom-up fill for dimmable entities. Absent when the entity has no level. */
+  fill?: number;
   entry: EntityEntry;
 }
 export interface Room {
@@ -132,6 +134,27 @@ export function stateActive(s: EntityState): boolean {
 }
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ");
+
+/** Bottom-up glass fill. Undefined when the entity has no meaningful level (including unavailable). */
+export function fillPercent(s: EntityState): number | undefined {
+  if (s.state === "unavailable" || s.state === "unknown") return undefined;
+  const domain = computeDomain(s.entity_id);
+  const a = s.attributes;
+  const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+  if (domain === "light") {
+    if (s.state !== "on" || typeof a.brightness !== "number") return undefined;
+    return clamp(a.brightness / 2.55);
+  }
+  if (domain === "cover" && typeof a.current_position === "number") return clamp(a.current_position);
+  if (domain === "fan" && typeof a.percentage === "number") return clamp(a.percentage);
+  if (domain === "media_player" && typeof a.volume_level === "number" && s.state !== "off" && s.state !== "standby")
+    return clamp(a.volume_level * 100);
+  if (domain === "sensor" && a.device_class === "battery") {
+    const n = Number(s.state);
+    if (Number.isFinite(n)) return clamp(n);
+  }
+  return undefined;
+}
 
 export function stateText(s: EntityState): string {
   const a = s.attributes;
@@ -229,6 +252,7 @@ export function buildRooms(
       active: stateActive(s),
       state: s.state,
       stateText: stateText(s),
+      fill: fillPercent(s),
       room: area?.name,
       image: domain === "camera" && s.attributes.entity_picture ? s.attributes.entity_picture : undefined,
       entry,
