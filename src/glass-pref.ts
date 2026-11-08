@@ -8,7 +8,7 @@ export function clampTransparency(value: number): number {
 }
 
 /**
- * Scales state opacity. At the default 35 the factor is 1, so off stays 0.35 and on stays 0.85.
+ * Scales state opacity. At the default 35 the factor is 1, so off stays 0.35 and on stays 0.25.
  * 100 clears the surface. 0 thickens it. Edges and highlights do not use this.
  */
 export function clearFactorForTransparency(transparency: number): number {
@@ -19,9 +19,9 @@ export function clearFactorForTransparency(transparency: number): number {
 export function applyGlassTransparency(value: number): number {
   const v = clampTransparency(value);
   const factor = clearFactorForTransparency(v);
-  const onAlpha = Math.min(1, 0.85 * factor);
-  // Dark type sits on the bright on-state. Once the user clears that surface, type goes back to white.
-  const onIsLight = onAlpha >= 0.6;
+  const onAlpha = Math.min(1, 0.25 * factor);
+  // The on-state is a light veil, so type stays charcoal until the user clears the glass.
+  const onIsLight = onAlpha >= 0.2;
   const root = document.documentElement;
   root.style.setProperty("--glass-transparency", String(v));
   root.style.setProperty("--glass-clear-factor", String(factor));

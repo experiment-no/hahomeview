@@ -10,12 +10,12 @@
    * Liquid Glass. Color comes from the wallpaper, not from a fill.
    * --glass-transparency is 0–100 (higher = clearer). --glass-clear-factor
    * scales state opacity and is 1 at the default of 35, so off stays 0.35
-   * and on stays 0.85. Edges, highlights and the entity fill do not follow it.
+   * and on is a white veil at 0.25. Edges, highlights and the entity fill do not follow it.
    */
   --glass-transparency: 35;
   --glass-clear-factor: 1;
   --glass-opacity-off: 0.35;
-  --glass-opacity-on: 0.85;
+  --glass-opacity-on: 0.25;
   /* Off-state type is charcoal on a light wallpaper so it stays readable. Dark mode switches it to white. */
   --glass-text-off: #292929;
   --glass-text-on: #292929;

@@ -41,7 +41,7 @@ export interface Handlers {
 
 export interface HA {
   conn: Connection;
-  call: (action: ServiceCall, entityId: string) => Promise<unknown>;
+  call: (action: ServiceCall, entityId: string, data?: Record<string, unknown>) => Promise<unknown>;
 }
 
 /** Logs in (redirecting to HA's own login page when needed), connects, and keeps the socket alive. */
@@ -105,6 +105,6 @@ export async function connect(h: Handlers): Promise<HA> {
 
   return {
     conn,
-    call: (a, entityId) => callService(conn, a.domain, a.service, undefined, { entity_id: entityId }),
+    call: (a, entityId, data) => callService(conn, a.domain, a.service, data, { entity_id: entityId }),
   };
 }
