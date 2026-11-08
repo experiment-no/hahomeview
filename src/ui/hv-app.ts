@@ -100,20 +100,91 @@ export class HvApp extends LitElement {
       padding: calc(env(safe-area-inset-top) + 16px) calc(env(safe-area-inset-right) + 16px)
         calc(env(safe-area-inset-bottom) + 40px) calc(env(safe-area-inset-left) + 16px);
     }
-    h1 { display: flex; align-items: baseline; justify-content: space-between; margin: 4px 6px 14px; font-size: 28px; font-weight: 700; letter-spacing: -0.3px; }
+    h1 {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 4px 6px 14px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.35px;
+    }
     h1 span { font-size: 20px; font-weight: 500; color: var(--text-2); }
-    h1 button { font: inherit; font-size: 17px; font-weight: 600; color: var(--tint-text); background: var(--tint); border: 0; border-radius: 16px; padding: 4px 14px; cursor: pointer; }
-    .grid { display: grid; grid-template-columns: repeat(var(--cols), var(--tile)); grid-auto-rows: var(--tile); gap: ${GAP}px; justify-content: center; }
+    h1 button {
+      font: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--tint-text);
+      background: var(--tint);
+      border: 1px solid var(--tint-edge);
+      border-radius: 980px;
+      padding: 6px 16px;
+      cursor: pointer;
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      backdrop-filter: blur(16px) saturate(160%);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.45) inset,
+        0 6px 18px -6px var(--glass-shadow);
+      transition:
+        transform var(--duration-fast) var(--ease-out),
+        filter var(--duration-fast) var(--ease-out);
+    }
+    h1 button:active { transform: scale(var(--press-scale)); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols), var(--tile));
+      grid-auto-rows: var(--tile);
+      gap: ${GAP}px;
+      justify-content: center;
+    }
     .grid > * { min-width: 0; min-height: 0; }
     hv-clock[editing] { touch-action: none; animation: wiggle 0.35s ease-in-out infinite; }
-    hv-clock[dragging] { opacity: 0.3; animation: none; }
+    hv-clock[dragging] { opacity: 0.35; animation: none; }
     @keyframes wiggle { 0%, 100% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } }
-    .ghost { position: fixed; z-index: 10; pointer-events: none; transform: scale(1.06); box-shadow: 0 16px 40px rgba(0,0,0,0.35); border-radius: var(--radius); }
+    .ghost {
+      position: fixed;
+      z-index: 10;
+      pointer-events: none;
+      transform: scale(1.05);
+      border-radius: var(--radius);
+      filter: drop-shadow(0 18px 36px var(--glass-shadow-lift));
+    }
     .ghost > * { width: 100%; height: 100%; }
-    .dots { position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 12px); display: flex; justify-content: center; gap: 7px; pointer-events: none; }
-    .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--text); opacity: 0.25; }
-    .dots i.on { opacity: 0.8; }
-    .pill { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--text-2); padding: 24px; text-align: center; }
+    .dots {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(env(safe-area-inset-bottom) + 12px);
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      pointer-events: none;
+    }
+    .dots i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text);
+      opacity: 0.22;
+      transition: opacity var(--duration) var(--ease-out), transform var(--duration) var(--ease-out);
+    }
+    .dots i.on { opacity: 0.85; transform: scale(1.15); }
+    .pill {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      color: var(--text-2);
+      padding: 24px;
+      text-align: center;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      h1 button, .dots i { transition: none; }
+      hv-clock[editing] { animation: none; }
+      .dots i.on { transform: none; }
+    }
   `;
 
   private _onScroll(e: Event) {

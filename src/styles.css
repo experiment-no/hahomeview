@@ -1,35 +1,86 @@
 :root {
   color-scheme: light dark;
+
+  /* Text */
   --text: #1c1c1e;
-  --text-2: rgba(60, 60, 67, 0.6);
-  --glass: rgba(255, 255, 255, 0.42);
-  --glass-edge: rgba(255, 255, 255, 0.7);
-  --glass-shadow: rgba(0, 0, 0, 0.1);
-  --icon: #5e5e66;
-  --tint: #c8bff6;        /* lights, fans: HomeView lavender */
-  --tint-text: #3b2f8f;
-  --tint-warm: #f6d9a8;   /* scenes */
-  --tint-warm-text: #6e4a0a;
-  --radius: 24px;
-  --bg-1: #dfe7f5;
-  --bg-2: #cfd7ea;
+  --text-2: rgba(60, 60, 67, 0.62);
+  --icon: #5c5c66;
+
+  /* Liquid Glass surface tokens */
+  --glass-fill: rgba(255, 255, 255, 0.38);
+  --glass-fill-strong: rgba(255, 255, 255, 0.52);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-border-soft: rgba(255, 255, 255, 0.28);
+  --glass-highlight: rgba(255, 255, 255, 0.72);
+  --glass-specular: rgba(255, 255, 255, 0.42);
+  --glass-shadow: rgba(15, 18, 28, 0.14);
+  --glass-shadow-lift: rgba(15, 18, 28, 0.22);
+  --glass-blur: 24px;
+  --glass-saturate: 165%;
+  --radius: 26px;
+
+  /* Active / state tints — translucent so the glass material still reads */
+  --tint: rgba(176, 158, 245, 0.58);
+  --tint-text: #2f2478;
+  --tint-edge: rgba(255, 255, 255, 0.58);
+  --tint-warm: rgba(246, 201, 140, 0.62);
+  --tint-warm-text: #6a4308;
+  --tint-warm-edge: rgba(255, 255, 255, 0.52);
+  --tint-cool: rgba(140, 198, 240, 0.55);
+  --tint-cool-text: #0f3d66;
+  --tint-cool-edge: rgba(255, 255, 255, 0.55);
+  --tint-alert: rgba(255, 176, 148, 0.55);
+  --tint-alert-text: #6b2a12;
+  --tint-alert-edge: rgba(255, 255, 255, 0.52);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --press-scale: 0.98;
+  --duration-fast: 160ms;
+  --duration: 220ms;
+
+  /* Wallpaper */
+  --bg-1: #e4ebf7;
+  --bg-2: #d3dbea;
   --bg-3: #eadfe9;
+  --bg-glow: rgba(255, 255, 255, 0.55);
 }
+
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #f2f2f7;
-    --text-2: rgba(235, 235, 245, 0.6);
-    --glass: rgba(50, 50, 58, 0.5);
-    --glass-edge: rgba(255, 255, 255, 0.18);
-    --glass-shadow: rgba(0, 0, 0, 0.4);
-    --icon: #c7c7cf;
-    --tint: #a89cf0;
+    --text-2: rgba(235, 235, 245, 0.58);
+    --icon: #c9c9d1;
+
+    --glass-fill: rgba(52, 54, 64, 0.48);
+    --glass-fill-strong: rgba(68, 70, 82, 0.58);
+    --glass-border: rgba(255, 255, 255, 0.22);
+    --glass-border-soft: rgba(255, 255, 255, 0.1);
+    --glass-highlight: rgba(255, 255, 255, 0.28);
+    --glass-specular: rgba(255, 255, 255, 0.16);
+    --glass-shadow: rgba(0, 0, 0, 0.42);
+    --glass-shadow-lift: rgba(0, 0, 0, 0.55);
+
+    --tint: rgba(168, 156, 240, 0.62);
     --tint-text: #1a1240;
-    --bg-1: #1f2233;
-    --bg-2: #141624;
-    --bg-3: #2a1f33;
+    --tint-edge: rgba(255, 255, 255, 0.34);
+    --tint-warm: rgba(232, 186, 120, 0.64);
+    --tint-warm-text: #4a2e05;
+    --tint-warm-edge: rgba(255, 255, 255, 0.3);
+    --tint-cool: rgba(120, 184, 232, 0.58);
+    --tint-cool-text: #0a2f4d;
+    --tint-cool-edge: rgba(255, 255, 255, 0.32);
+    --tint-alert: rgba(240, 160, 130, 0.58);
+    --tint-alert-text: #4a1a0c;
+    --tint-alert-edge: rgba(255, 255, 255, 0.3);
+
+    --bg-1: #23263a;
+    --bg-2: #12141f;
+    --bg-3: #2c2238;
+    --bg-glow: rgba(120, 140, 200, 0.18);
   }
 }
+
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body {
@@ -44,16 +95,26 @@ body {
   overscroll-behavior: none;
   overflow: hidden;
 }
-/* Static gradient wallpaper on a fixed layer (iOS has no background-attachment: fixed). */
+
+/* Soft luminous wallpaper — glass tiles refract these layers. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(60% 50% at 15% 10%, var(--bg-1) 0%, transparent 70%),
-    radial-gradient(50% 60% at 85% 20%, var(--bg-3) 0%, transparent 70%),
-    radial-gradient(70% 60% at 50% 100%, var(--bg-1) 0%, transparent 70%),
+    radial-gradient(55% 45% at 12% 8%, var(--bg-glow) 0%, transparent 70%),
+    radial-gradient(50% 55% at 88% 18%, var(--bg-3) 0%, transparent 68%),
+    radial-gradient(70% 55% at 48% 100%, var(--bg-1) 0%, transparent 72%),
+    radial-gradient(40% 35% at 60% 40%, var(--bg-glow) 0%, transparent 70%),
     var(--bg-2);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration: 0ms;
+  }
+}
+
 hv-app { display: block; height: 100%; }

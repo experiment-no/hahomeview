@@ -34,14 +34,50 @@ export class HvClock extends LitElement {
   static styles = [
     glass,
     css`
-      :host { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; }
-      svg { width: 78%; height: 78%; }
-      .face { fill: rgba(255, 255, 255, 0.85); }
-      .tick { stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
-      .num { fill: var(--text); font-size: 9px; font-weight: 600; text-anchor: middle; }
-      .hand { stroke: var(--text); stroke-linecap: round; }
-      .sec { stroke: #ff9f0a; stroke-width: 1; }
-      @media (prefers-color-scheme: dark) { .face { fill: rgba(28, 28, 32, 0.8); } }
+      :host {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 1;
+        cursor: default;
+      }
+      /* Clock is chrome, not a control — kill press/hover lift from glass. */
+      :host(:active) { transform: none; filter: none; }
+      @media (hover: hover) and (pointer: fine) {
+        :host(:hover) { filter: none; background: var(--glass-fill); }
+      }
+      svg {
+        position: relative;
+        z-index: 2;
+        width: 78%;
+        height: 78%;
+      }
+      .face { fill: rgba(255, 255, 255, 0.78); }
+      .tick {
+        stroke: var(--text);
+        stroke-width: 2;
+        stroke-linecap: round;
+        opacity: 0.35;
+      }
+      .num {
+        fill: var(--text);
+        font-size: 9px;
+        font-weight: 600;
+        text-anchor: middle;
+        opacity: 0.9;
+      }
+      .hand {
+        stroke: var(--text);
+        stroke-linecap: round;
+      }
+      .sec {
+        stroke: #ff9f0a;
+        stroke-width: 1;
+      }
+      .hub { fill: #ff9f0a; }
+      @media (prefers-color-scheme: dark) {
+        .face { fill: rgba(28, 28, 34, 0.78); }
+      }
     `,
   ];
 
@@ -62,7 +98,7 @@ export class HvClock extends LitElement {
       ${hand(h * 30, 22, "", 4)}
       ${hand(m * 6, 32, "", 3)}
       ${hand(s * 6, 36, "sec", 1)}
-      <circle cx="50" cy="50" r="2.5" fill="#ff9f0a" />
+      <circle class="hub" cx="50" cy="50" r="2.5" />
     </svg>`;
   }
 }
